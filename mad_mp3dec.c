@@ -5,7 +5,7 @@
  */
 
 #include "mad.h"
-#include "MadMP3Dec.h"
+#include "mad_mp3dec.h"
 
 #define DBG             // printf
 #define ABORT() DBG("abort %s %d", __FILE__, __LINE__); while (1);
@@ -57,7 +57,7 @@ enum mad_flow error(void *data,
 }
 
 
-int madMP3Dec_init(void)
+int mad_mp3dec_init(void)
 {
 	struct mad_stream *stream = &dec_stream;
 	struct mad_frame *frame = &dec_frame;
@@ -73,7 +73,7 @@ int madMP3Dec_init(void)
 	mad_stream_options(stream, 0);
 }
 
-int madMP3Dec_feeddata(char *buf, int len)
+int mad_mp3dec_feeddata(char *buf, int len)
 {
 	struct mad_stream *stream = &dec_stream;
 
@@ -82,7 +82,7 @@ int madMP3Dec_feeddata(char *buf, int len)
 	return len;
 }
 
-int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail, int *taillen)
+int mad_mp3dec_decode(char *buf, int *len, mad_mp3dec_pcm_info_t *pcm_info, char *tail, int *tail_len)
 {
 	struct mad_stream *stream = &dec_stream;
 	struct mad_frame *frame = &dec_frame;
@@ -101,12 +101,12 @@ int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail,
 			rem_p += buf_len;
 			remainder -= buf_len;
 			*len = remainder;
-			*taillen = stream->bufend - stream->next_frame;
-			if (*taillen > 0) {
-				memmove(tail, stream->next_frame, *taillen);
+			*tail_len = stream->bufend - stream->next_frame;
+			if (*tail_len > 0) {
+				memmove(tail, stream->next_frame, *tail_len);
 			}
 			return buf_len;
-		} else  {
+		} else {
 			memcpy(buf, rem_p, remainder);
 			writed = remainder;
 			rem_p = rembuf;
@@ -128,9 +128,9 @@ int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail,
 		// read decode data
 		mad_synth_frame(synth, frame);
 
-		pcminfo->bit = OUTPUT_BIT_PER_SAMPLE;
-		pcminfo->channels = synth->pcm.channels;
-		pcminfo->samplerate = synth->pcm.samplerate;
+		pcm_info->sample_bits = OUTPUT_BIT_PER_SAMPLE;
+		pcm_info->channels = synth->pcm.channels;
+		pcm_info->sample_rate = synth->pcm.samplerate;
 		pcm_samples = synth->pcm.length;
 
 		left_ch = synth->pcm.samples[0];
@@ -151,14 +151,14 @@ int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail,
 				rembuf[writed] = (sample >> 8) & 0xff;
 				remainder++;
 
-				if (pcminfo->channels == 2) {
+				if (pcm_info->channels == 2) {
 					sample = scale(*right_ch++);
 					rembuf[writed] = (sample >> 0) & 0xff;
 					remainder++;
 					rembuf[writed] = (sample >> 8) & 0xff;
 					remainder++;
 				}
-			} else  {
+			} else {
 				// output pcm data
 				sample = scale(*left_ch++);
 				buf[writed] = (sample >> 0) & 0xff;
@@ -166,7 +166,7 @@ int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail,
 				buf[writed] = (sample >> 8) & 0xff;
 				writed++;
 
-				if (pcminfo->channels == 2) {
+				if (pcm_info->channels == 2) {
 					sample = scale(*right_ch++);
 					buf[writed] = (sample >> 0) & 0xff;
 					writed++;
@@ -179,14 +179,14 @@ int madMP3Dec_decode(char *buf, int *len, MP3Dec_PCMInfo_t *pcminfo, char *tail,
 
 	*len = remainder;
 	// output haven't decode data
-	*taillen = stream->bufend - stream->next_frame;
-	if (*taillen > 0) {
-		memmove(tail, stream->next_frame, *taillen);
+	*tail_len = stream->bufend - stream->next_frame;
+	if (*tail_len > 0) {
+		memmove(tail, stream->next_frame, *tail_len);
 	}
 	return writed;
 }
 
-int madMP3Dec_deinit(void)
+int mad_mp3dec_deinit(void)
 {
 	struct mad_stream *stream = &dec_stream;
 	struct mad_frame *frame = &dec_frame;

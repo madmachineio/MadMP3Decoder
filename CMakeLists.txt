@@ -24,13 +24,13 @@ SET(LIBMADMP3DECODER_SRC ./libmad-0.15.1b/bit.c
 				./libmad-0.15.1b/synth.c
 				./libmad-0.15.1b/timer.c
 				./libmad-0.15.1b/version.c
-				./MadMP3Dec.c)
+				./mad_mp3dec.c)
 				
 ADD_LIBRARY(madmp3decoder STATIC ${LIBMADMP3DECODER_SRC})
 
 add_custom_command(TARGET madmp3decoder POST_BUILD
 	COMMAND mkdir -p ${PROJECT_SOURCE_DIR}/../externlib/inc
-    COMMAND cp ${PROJECT_SOURCE_DIR}/MadMP3Dec.h ${PROJECT_SOURCE_DIR}/../externlib/inc)
+    COMMAND cp ${PROJECT_SOURCE_DIR}/mad_mp3dec.h ${PROJECT_SOURCE_DIR}/../externlib/inc)
 
 #gcc ../libmad-0.15.1b/minimad.c -I../libmad-0.15.1b/ -L../../externlib/lib/ -lmadmp3decoder -o minimad
 #./minimad < ~/test.mp3 1>test.pcm
